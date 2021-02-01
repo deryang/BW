@@ -1,0 +1,59 @@
+No.1  CMOD   rsap0001. 
+Exit 1   事务      Transcation
+Exit 2   文本			 Text
+Exit 3   层次结构	  Hierarchy
+
+No.2   SE19  Class Implementation: RSU5_SAPI_BADI  ZRSU5_SAPI_BADI.
+
+Example:
+    DATA: LV_METHOD TYPE SEOCMPNAME.
+* check if any data is extracted
+    CHECK C_T_DATA IS NOT INITIAL.
+* get method name for datasource
+* add one character as methods can't start with a number
+    CONCATENATE 'M_' I_DATASOURCE INTO LV_METHOD.
+* check whether method exist
+    SELECT SINGLE CMPNAME
+    INTO LV_METHOD
+    FROM SEOCOMPO
+    WHERE CLSNAME = 'ZCL_IM_RSU5_SAPI_BADI'
+    AND CMPNAME = LV_METHOD.
+    CHECK SY-SUBRC EQ 0.
+* check method is implemented
+    CALL METHOD (LV_METHOD)
+      EXPORTING
+        I_UPDMODE    = I_UPDMODE
+        I_T_SELECT   = I_T_SELECT
+        I_T_FIELDS   = I_T_FIELDS
+      CHANGING
+        C_T_DATA     = C_T_DATA
+        C_T_MESSAGES = C_T_MESSAGES.
+In Datasource 0fi_gl_14中做增强需要放出来相应的字段
+Examp:
+  METHOD M_0FI_GL_14.
+    FIELD-SYMBOLS :<FS> TYPE FAGLPOSBW.
+
+    DATA: LT_ACDOCA TYPE STANDARD TABLE OF ACDOCA.
+
+    SELECT  *  INTO TABLE LT_ACDOCA
+     FROM ACDOCA
+      WHERE ZZXJLBM <> ''.
+
+    LOOP AT  C_T_DATA ASSIGNING <FS> .
+      READ TABLE LT_ACDOCA INTO DATA(LS_ACD) WITH KEY  RLDNR = <FS>-RLDNR
+                                                    	 RBUKRS = <FS>-BUKRS
+                                                    	 GJAHR  = <FS>-GJAHR
+                                                    	 BELNR = <FS>-BELNR
+                                                    	 DOCLN = <FS>-DOCLN.
+      IF LS_ACD-ZZXJLBM IS NOT INITIAL.
+        <FS>-ZZXJLBM = LS_ACD-ZZXJLBM.
+*<FS>-Z
+      ENDIF.
+      CLEAR LS_ACD.
+    ENDLOOP.
+
+
+    CLEAR LT_ACDOCA.
+  ENDMETHOD.
+
+				
